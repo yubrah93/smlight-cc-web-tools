@@ -17,6 +17,27 @@ jobs:
           node-version: 16
           registry-url: https://registry.npmjs.org/
       - run: npm ci
+      - name: Report Rollouts deployment start
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          CHANGE_MONITOR_ENV: "publish-npm"
+          CHANGE_MONITOR_SERVICE: "@smlight/cc-web-tools"
+          CHANGE_MONITOR_SOURCE: ${{ github.server_url }}/${{ github.repository }}
+          CHANGE_MONITOR_ACTOR: "github-actions:${{ github.run_id }}:${{ github.run_attempt }}:${{ github.workflow }}:${{ github.job }}:@smlight/cc-web-tools:publish-npm"
+        run: |
+          export DEPLOY_VERSION="$(git rev-parse HEAD)"
+          bash .github/scripts/rollouts-reporter.sh bootstrap
+          bash .github/scripts/rollouts-reporter.sh start
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+      - name: Report Rollouts deployment finish
+        if: always()
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          CHANGE_MONITOR_ENV: "publish-npm"
+          CHANGE_MONITOR_SERVICE: "@smlight/cc-web-tools"
+          CHANGE_MONITOR_SOURCE: ${{ github.server_url }}/${{ github.repository }}
+          CHANGE_MONITOR_ACTOR: "github-actions:${{ github.run_id }}:${{ github.run_attempt }}:${{ github.workflow }}:${{ github.job }}:@smlight/cc-web-tools:publish-npm"
+          CHANGE_MONITOR_OUTCOME: ${{ job.status }}
+        run: bash .github/scripts/rollouts-reporter.sh finish
