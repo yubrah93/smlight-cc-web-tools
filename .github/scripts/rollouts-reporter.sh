@@ -120,13 +120,6 @@ rollouts_persist() {
   else
     : > "$rollouts_state_file"
   fi
-  if [ -n "${GITHUB_ENV:-}" ]; then
-    {
-      echo "ROLLOUTS_DEPLOYMENT<<ROLLOUTS_EOF"
-      printf '%s\n' "$DEPLOYMENT"
-      echo "ROLLOUTS_EOF"
-    } >> "$GITHUB_ENV"
-  fi
   if [ -n "${GITHUB_OUTPUT:-}" ]; then
     {
       echo "deployment<<ROLLOUTS_EOF"
@@ -250,7 +243,7 @@ case "$cmd" in
     if [ -z "${CHANGE_MONITOR_ACTOR:-}" ]; then
       CHANGE_MONITOR_ACTOR="github-actions:${GITHUB_RUN_ID:-local}:${GITHUB_RUN_ATTEMPT:-1}:${GITHUB_WORKFLOW:-local}:${GITHUB_JOB:-local}:${CHANGE_MONITOR_SERVICE:-}:${CHANGE_MONITOR_ENV:-}"
     fi
-    if [ -z "${ROLLOUTS_DEPLOYMENT:-}" ] && [ -f "$rollouts_deployment_file" ]; then
+    if [ -f "$rollouts_deployment_file" ]; then
       ROLLOUTS_DEPLOYMENT="$(cat "$rollouts_deployment_file")"
     fi
     if [ -z "${ROLLOUTS_DEPLOYMENT:-}" ] || [ "$ROLLOUTS_DEPLOYMENT" = "null" ]; then
